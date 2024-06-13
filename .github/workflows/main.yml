@@ -1,0 +1,70 @@
+name: Celatone Core Main Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      base: ${{ steps.changes.outputs.base }}
+      sub1: ${{ steps.changes.outputs.sub1 }}
+      sub2: ${{ steps.changes.outputs.sub2 }}
+      sub3: ${{ steps.changes.outputs.sub3 }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            base:
+              - '.github/workflows/main.yml'
+            sub1:
+              - '.github/workflows/sub1.yml'
+              - '.github/workflows/sub1-prod.yml'
+            sub2:
+              - '.github/workflows/sub2.yml'
+              - '.github/workflows/sub2-prod.yml'
+            sub3:
+              - '.github/workflows/sub3.yml'
+              - '.github/workflows/sub3-prod.yml'
+  base:
+    name: Base
+    needs: [changes]
+    if: needs.changes.outputs.base == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Step1
+        run: echo "Step1"
+
+  sub1-staging:
+    needs: [changes, base]
+    if: always() && !failure() && !cancelled() && needs.changes.outputs.sub1 == 'true'
+    uses: ./.github/workflows/sub1.yml
+
+  sub1-prod:
+    needs: [changes, sub1-staging]
+    if: always() && !failure() && !cancelled() && needs.changes.outputs.sub1 == 'true'
+    uses: ./.github/workflows/sub1-prod.yml
+
+  sub2-staging:
+    needs: [changes, sub1-staging]
+    if: always() && !failure() && !cancelled() && needs.changes.outputs.sub2 == 'true'
+    uses: ./.github/workflows/sub2.yml
+
+  sub2-prod:
+    needs: [changes, sub2-staging, sub1-prod]
+    if: always() && !failure() && !cancelled() && needs.changes.outputs.sub2 == 'true'
+    uses: ./.github/workflows/sub2-prod.yml
+
+  sub3-staging:
+    needs: [changes, sub1-staging]
+    if: always() && !failure() && !cancelled() && needs.changes.outputs.sub3 == 'true'
+    uses: ./.github/workflows/sub3.yml
+
+  sub3-prod:
+    needs: [changes, sub3-staging, sub1-prod]
+    if: always() && !failure() && !cancelled() && needs.changes.outputs.sub3 == 'true'
+    uses: ./.github/workflows/sub3-prod.yml

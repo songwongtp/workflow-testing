@@ -1,0 +1,11 @@
+name: Sub workflow 2 Staging
+
+on:
+  workflow_call:
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    steps:
+      - name: apply
+        run: echo "Sub2 Staging"

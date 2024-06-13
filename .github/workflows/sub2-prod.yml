@@ -1,0 +1,23 @@
+name: Sub workflow 2 Production
+
+on:
+  workflow_call:
+
+jobs:
+  approve-prod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: trstringer/manual-approval@v1
+        timeout-minutes: 5
+        with:
+          secret: ${{ github.token }}
+          approvers: songwongtp
+          minimum-approvals: 1
+          issue-title: "Test sub2"
+          exclude-workflow-initiator-as-approver: false
+  execute:
+    needs: [approve-prod]
+    runs-on: ubuntu-latest
+    steps:
+      - name: apply
+        run: echo "Sub2 Production"
